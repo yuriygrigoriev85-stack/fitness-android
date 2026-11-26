@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Дневник тренировок</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2f5d50">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Дневник">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--ink:#1c1c1a;--mut:#77756f;--line:#e3e1db;--acc:#2f5d50;--acc2:#e7f0ec;--warn:#b54a2a;--ok:#2f7d55;--chip:#efeee9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141513;--card:#1e201d;--ink:#ecebe6;--mut:#9a988f;--line:#30322e;--acc:#7fbfa9;--acc2:#233530;--warn:#e38a6b;--ok:#8fd0a6;--chip:#2a2c28}}
+:root[data-theme="dark"]{--bg:#141513;--card:#1e201d;--ink:#ecebe6;--mut:#9a988f;--line:#30322e;--acc:#7fbfa9;--acc2:#233530;--warn:#e38a6b;--ok:#8fd0a6;--chip:#2a2c28}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-top:env(safe-area-inset-top,0px)}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs{display:flex;max-width:640px;margin:0 auto}
+.tabs button{flex:1;padding:14px 4px;border:0;background:none;color:var(--mut);font:600 15px inherit;font-family:inherit;border-bottom:3px solid transparent}
+.tabs button.on{color:var(--ink);border-color:var(--acc)}
+main{max-width:640px;margin:0 auto;padding:10px 12px 150px}
+main.nobar{padding-bottom:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+textarea{width:100%;min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px}
+button{font:inherit;font-family:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 14px;font-weight:600}
+.btn.pri{background:var(--acc);color:var(--card);border-color:var(--acc)}
+.btn.ghost{background:none}
+.btn.sm{padding:6px 10px;font-size:14px}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:6px 12px;margin:3px 4px 3px 0;border:0;color:var(--ink);font-size:14px}
+.chip b{margin-right:4px}
+.chip.done{background:var(--acc2);color:var(--acc)}
+.daycard.done{border-color:var(--ok)}
+.mut{color:var(--mut);font-size:13px}
+.ex-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.code{font-weight:800;color:var(--acc);min-width:44px}
+.sets{margin-top:8px}
+.setg{display:inline-flex;align-items:center;gap:2px;margin:0 6px 6px 0;background:var(--chip);border-radius:10px;padding:2px 3px;border:1px solid transparent}
+.setg:focus-within{border-color:var(--acc)}
+.setg.pre{opacity:.5;border-style:dashed;border-color:var(--mut)}
+.setg.pre:focus-within{opacity:1}
+.setg input{width:47px;text-align:center;padding:9px 1px;border:0;background:transparent;border-radius:8px;font-size:15px}
+.setg .mul{color:var(--mut);font-size:13px}
+.setn{font-size:11px;color:var(--mut);min-width:11px;text-align:center}
+.freein{width:100%;margin-bottom:6px}
+.setlab{font-size:12px;color:var(--mut);margin:2px 0 4px}
+.swapbox{border:1px solid var(--acc);background:var(--acc2);border-radius:12px;padding:10px;margin-top:8px}
+.planline{font-size:13px;color:var(--acc);font-weight:600;margin:2px 0 6px}
+.planline b{font-weight:800}
+.deltaok{color:var(--ok)} .deltalow{color:var(--warn)}
+.rirrow{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.rirrow .lab{font-size:12px;color:var(--mut)}
+.rirrow .qbtn{width:22px;height:22px;font-size:12px}
+.rir{border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700}
+.rir.on{background:var(--acc);color:var(--card);border-color:var(--acc)}
+.qbtn{border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:50%;width:26px;height:26px;font-weight:700;font-size:14px;line-height:1;padding:0}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet.hidden{display:none}
+.sheetin{background:var(--card);width:100%;max-width:640px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.sheetin h3{font-size:17px;margin:0 0 2px}
+.sheetin svg{width:100%;max-width:340px;height:auto;color:var(--acc);display:block;margin:10px auto;background:var(--chip);border-radius:12px;padding:8px}
+.cues{margin:10px 0 0;padding-left:20px}
+.cues li{margin-bottom:5px;font-size:14px}
+.warnbox{background:var(--acc2);border-left:3px solid var(--warn);padding:8px 10px;border-radius:8px;margin-top:10px;font-size:14px}
+.stopline{display:flex;gap:6px;align-items:flex-start;margin-top:8px;font-size:13px;color:var(--warn);line-height:1.35}
+.stopline b{color:var(--warn);flex:0 0 auto}
+.stopbox{background:var(--acc2);border-left:3px solid var(--warn);padding:10px;border-radius:8px;margin-top:10px;font-size:14px}
+.tipstub{display:block;width:100%;text-align:left;border:1px dashed var(--line);background:none;color:var(--mut);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13px}
+.tipstub b{color:var(--acc)}
+.tipcard{border:1px solid var(--acc);background:var(--acc2);border-radius:14px;padding:12px;margin-bottom:10px}
+.tipcard h4{margin:0 0 4px;font-size:14px}
+.tipcard p{margin:0;font-size:13px;color:var(--ink);opacity:.85}
+.carousel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:10px -12px 0;padding:2px 12px 8px;-webkit-overflow-scrolling:touch}
+.carousel::-webkit-scrollbar{display:none}
+.wcard{flex:0 0 132px;scroll-snap-align:start;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 10px;text-align:left;color:var(--ink)}
+.wcard .no{font-size:11px;color:var(--mut);display:flex;justify-content:space-between;align-items:baseline;gap:4px}
+.wcard .nm{font-weight:700;font-size:13px;margin:3px 0 2px;line-height:1.25}
+.wcard .sub{font-size:11px;color:var(--mut)}
+.wcard.done{background:var(--acc2);border-color:var(--acc)}
+.wcard.done .nm{color:var(--acc)}
+.wcard.next{border-color:var(--acc);border-width:2px;padding:8px 9px}
+.wcard.cur{outline:2px solid var(--acc);outline-offset:1px}
+.wcard .nbadge{background:var(--acc);color:var(--card);border-radius:5px;padding:0 4px;font-size:10px;font-weight:800}
+.wsep{flex:0 0 1px;background:var(--line);margin:4px 2px;align-self:stretch}
+.stale{border:1px solid var(--warn);background:var(--card);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.stale b{color:var(--warn)}
+.daybtn{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;color:var(--ink)}
+.daybtn.next{border-color:var(--acc);background:var(--acc2)}
+.daybtn b{display:block;font-size:15px;margin-bottom:2px}
+.daybtn span{font-size:13px;color:var(--mut)}
+.ptab{font-size:14px;line-height:1.5}
+.ptab table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.ptab td{padding:5px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.ptab td:first-child{font-weight:800;color:var(--acc);white-space:nowrap}
+.ptab td:last-child{text-align:right;white-space:nowrap;color:var(--mut)}
+.x{border:0;background:none;color:var(--mut);font-size:20px;padding:4px 8px}
+.hint{margin-top:6px;font-size:13px;color:var(--mut)}
+.hint button{border:0;background:var(--acc2);color:var(--acc);border-radius:8px;padding:4px 8px;font-size:13px;font-weight:600;margin-left:4px}
+.list{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:6px}
+.list div{padding:10px;border-bottom:1px solid var(--line)}
+.list div:last-child{border:0}
+.restbar{display:flex;align-items:baseline;gap:8px;padding:7px 10px;margin-bottom:8px;border-radius:10px;
+  background:var(--chip);border:1px solid var(--line);cursor:pointer;max-width:640px;margin-left:auto;margin-right:auto}
+.restbar .rt{font-weight:800;font-size:17px;font-variant-numeric:tabular-nums;color:var(--acc);min-width:52px}
+.restbar .rl{font-size:12px;color:var(--mut);line-height:1.3}
+.restbar.done{background:var(--acc);border-color:var(--acc)}
+.restbar.done .rt,.restbar.done .rl{color:var(--card)}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+.savebar .in{max-width:640px;margin:0 auto;display:flex;gap:8px}
+.savebar .btn{flex:1;padding:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:9;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+.hist-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.hist-l{font-size:14px;margin-top:6px}
+.hist-l span{font-weight:700;color:var(--acc);display:inline-block;min-width:44px}
+.err{color:var(--warn)}
+.ok{color:var(--ok)}
+h3{margin:4px 0 8px;font-size:15px}
+.hidden{display:none}
+.grp{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 2px}
+#sync{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:13px;color:var(--mut);padding:6px 2px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block;margin-right:6px;vertical-align:middle}
+.dot.on{background:var(--ok)}.dot.off{background:var(--warn)}.dot.pend{background:#d8a13a}
+.badge{background:var(--acc2);color:var(--acc);border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<header><div class="tabs">
+<button data-t="log" class="on">Запись</button>
+<button data-t="plan">План</button>
+<button data-t="hist">История</button>
+<button data-t="codes">Коды</button>
+<button data-t="sys">Данные</button>
+</div></header>
+<main>
+<div id="sync"><span id="syncL"><span class="dot"></span>Загрузка…</span></div>
+
+<section id="t-log">
+  <div class="card">
+    <div class="row">
+      <input type="date" id="date" style="flex:1">
+      <button class="btn sm ghost" id="modeBtn">Ввод текстом</button>
+    </div>
+    <div id="editNote" class="mut hidden" style="margin-top:6px"></div>
+  </div>
+
+  <div id="staleBox"></div>
+  <div class="card" id="planBar">
+    <div class="row" style="justify-content:space-between;gap:8px">
+      <div style="min-width:0"><div class="mut" id="planLead">Следующая</div><div id="planNext" style="font-weight:700"></div><div class="mut" id="planWhy" style="margin-top:2px"></div></div>
+      <button class="btn pri sm" id="loadPlan">Загрузить</button>
+    </div>
+    <div class="carousel" id="planPick"></div>
+  </div>
+  <div id="deloadBox"></div>
+  <div id="warmBox"></div>
+  <div id="tipBox"></div>
+
+
+  <div id="textMode" class="card hidden">
+    <h3>Одна строка — одно упражнение</h3>
+    <textarea id="txt" placeholder="ЖГ 50\10 60\10 65\10&#10;РЛ 9\10 ×3&#10;ПГ -50\10 ×3&#10;ПР 60&#10;КД 60 мин, 5.5 км/ч"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn pri" id="parseBtn">Разобрать в список</button><span id="parseMsg" class="mut"></span></div>
+  </div>
+
+  <div id="exs"></div>
+
+  <div class="card">
+    <input id="search" placeholder="Добавить: код или название" style="width:100%" autocomplete="off">
+    <div id="results" class="list hidden"></div>
+  </div>
+</section>
+
+<section id="t-plan" class="hidden">
+  <div class="card ptab">
+    <h3>Как это устроено</h3>
+    <p style="margin:0 0 8px">Дней недели нет — есть очередь: Д1 → Д2 → Д3 → Д4 → Д1. Пришёл в зал — делаешь следующую. Пропущенных тренировок не существует, очередь просто идёт медленнее.</p>
+    <p style="margin:0 0 8px">Цель — 4 раза в неделю. Вышло 3 — нормально. Вышло 5 — отлично.</p>
+    <p style="margin:0" class="mut">Порядок — рекомендация, а не запрет. Можно взять любой день: тренажёр занят, спина ноет, времени мало. Галочка показывает, что уже сделано на этой неделе, чтобы не повторить одно дважды и не забыть другое.</p>
+  </div>
+  <div id="planWeek"></div>
+  <div id="planDays"></div>
+  <div id="planTips"></div>
+</section>
+
+<section id="t-hist" class="hidden">
+  <div class="card row"><span class="mut" id="histCount"></span></div>
+  <div id="hist"></div>
+</section>
+
+<section id="t-codes" class="hidden">
+  <div class="card">
+    <h3>Новый код</h3>
+    <div class="row">
+      <input id="nCode" placeholder="Код" style="width:86px;text-transform:uppercase">
+      <input id="nName" placeholder="Название" style="flex:1">
+    </div>
+    <div class="row" style="margin-top:8px">
+      <input id="nGroup" placeholder="Группа (Грудь, Спина…)" list="groups" style="flex:1">
+      <button class="btn pri" id="addCode">Добавить</button>
+    </div>
+    <datalist id="groups"></datalist>
+    <div id="codeMsg" class="mut" style="margin-top:6px"></div>
+  </div>
+  <div id="codeList"></div>
+</section>
+
+<section id="t-sys" class="hidden">
+  <div id="tipToggle"></div>
+  <div class="card">
+    <h3>Резервная копия</h3>
+    <p class="mut" style="margin:0 0 8px">Программа, справочник и история в одном JSON.</p>
+    <div class="row">
+      <button class="btn pri" id="expJson">Выгрузить JSON</button>
+      <button class="btn" id="expCsv">Выгрузить CSV</button>
+    </div>
+    <div id="dumpWrap" class="hidden" style="margin-top:10px">
+      <div class="row" style="justify-content:space-between"><b id="dumpTitle" style="font-size:14px"></b><button class="btn sm ghost" id="dumpClose">Скрыть</button></div>
+      <textarea id="dump" readonly style="min-height:200px"></textarea>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Загрузить из файла</h3>
+    <p class="mut" style="margin:0 0 8px">Восстановление из ранее выгруженного JSON. Тренировки с одинаковой датой заменяются на те, что новее.</p>
+    <input type="file" id="impFile" accept=".json,application/json">
+    <div id="impMsg" class="mut" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h3>Как работать без сети</h3>
+    <p class="mut" style="margin:0">Данные хранятся прямо на телефоне, поэтому запись и история открываются без интернета. Добавь страницу на главный экран — она будет запускаться как приложение. Выгружай JSON для резервного копирования.</p>
+    <div id="swMsg" class="mut" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h3>Хранилище</h3>
+    <div id="stats" class="mut"></div>
+  </div>
+</section>
+</main>
+
+<div class="savebar" id="savebar">
+  <div id="restBar" class="restbar hidden"></div>
+  <div class="in">
+  <button class="btn" id="clearBtn">Очистить</button>
+  <button class="btn pri" id="saveBtn">Сохранить</button>
+</div></div>
+<div class="toast" id="toast"></div>
+<div class="sheet hidden" id="sheet"><div class="sheetin" id="sheetIn"></div></div>
+
+<script src="migration.js"></script>
+<script src="program.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const HAVEP=(Boolean(PROGRAM?.days?.length));
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const MAXS=8;
+const K={codes:"fitnessAndroid.codes",w:"fitnessAndroid.workouts",del:"fitnessAndroid.deleted",dirty:"fitnessAndroid.dirty",cdirty:"fitnessAndroid.codesDirty",draft:"fitnessAndroid.draft"};
+
+let db=null;
+let codes=[], workouts={}, deleted={}, dirty={}, codesDirty=false;
+let cur=[], editingId=null, syncing=false, swapFor=null, curDay=null, autoId=null;
+
+/* ---------- storage ---------- */
+function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){toast("Память телефона переполнена");return false}}
+function loadLocal(){const s=ls("fitnessAndroid.state",{}); codes=s.codes||[]; workouts=s.workouts||{};}
+function saveState(){if(!ss("fitnessAndroid.state",{codes,workouts,profile}))throw new Error("Не удалось записать в память");}
+function saveW(){saveState()}
+function saveC(){saveState()}
+/* ---------- utils ---------- */
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),2200)}
+function today(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function fmt(d){const p=String(d||"").split("-");return p.length===3?`${p[2]}.${p[1]}.${p[0].slice(2)}`:d}
+const byCode=c=>codes.find(x=>x.code===c);
+const norm=s=>String(s||"").toUpperCase().replace(/Ё/g,"Е").trim();
+const nk=x=>String(x).replace(".",",");
+const pendCount=()=>Object.keys(dirty).length+Object.keys(deleted).length+(codesDirty?1:0);
+
+function setSync(state,text){
+  $("#syncL").innerHTML=`<span class="dot${state?" "+state:""}"></span>${esc(text)}`;
+}
+function refreshSync(){setSync("on","Сохранение на устройстве")}
+/* ---------- history helpers ---------- */
+function sortedIds(){return Object.keys(workouts).sort((a,b)=>(workouts[b].date||"").localeCompare(workouts[a].date||"")||String(workouts[b].updatedAt||"").localeCompare(String(workouts[a].updatedAt||""))||b.localeCompare(a))}
+function lastSets(code,beforeDate){
+  for(const id of sortedIds()){
+    if(id===editingId||id===autoId)continue;
+    const w=workouts[id]; if(beforeDate&&w.date>=beforeDate)continue;
+    const e=(w.entries||[]).find(x=>x.code===code);
+    if(e&&e.sets&&e.sets.length)return{date:w.date,sets:e.sets};
+  }
+  return null;
+}
+
+/* ---------- draft ---------- */
+function saveDraft(){ss(K.draft,{date:$("#date").value,cur,editingId,curDay,autoId})}
+function loadDraft(){const d=ls(K.draft,null);if(d&&d.cur&&d.cur.length){$("#date").value=d.date||today();cur=d.cur;editingId=d.editingId||null;curDay=d.curDay||null;autoId=d.autoId||null;return true}return false}
+function clearDraft(){try{localStorage.removeItem(K.draft)}catch(e){}}
+
+/* ---------- разбор подхода ---------- */
+function parseSet(v){
+  v=String(v==null?"":v).trim();
+  if(!v||v==="-"||v==="—")return{w:"",r:""};   // прочерк = «не записано», а не свободный текст
+  const m=v.match(/^(-?\d+(?:[.,]\d+)?)\s*[\\\/]\s*(\d+)$/);
+  if(m)return{w:m[1],r:m[2]};
+  if(/^-?\d+(?:[.,]\d+)?$/.test(v))return{w:"",r:v};
+  return{free:v};
+}
+function joinSet(w,r){
+  w=String(w||"").replace(/\s/g,""); r=String(r||"").replace(/\s/g,"");
+  return (w&&r)?w+"\\"+r:(w||r||"");
+}
+function isFree(e){
+  if((e.sets||[]).some(s=>parseSet(s).free!==undefined))return true;
+  for(const id of sortedIds()){
+    const h=(workouts[id].entries||[]).find(x=>x.code===e.code);
+    if(h&&(h.sets||[]).some(s=>parseSet(s).free!==undefined))return true;
+  }
+  return false;
+}
+function isAssist(code){
+  let any=false,allNeg=true;
+  for(const id of sortedIds()){
+    const e=(workouts[id].entries||[]).find(x=>x.code===code); if(!e)continue;
+    for(const s of (e.sets||[])){
+      const p=parseSet(s); if(p.free!==undefined||!p.w)continue;
+      any=true; if(parseFloat(String(p.w).replace(",","."))>=0)allNeg=false;
+    }
+  }
+  return any&&allNeg;
+}
+
+/* ---------- программа ---------- */
+function dayById(id){return HAVEP?PROGRAM.days.find(d=>d.id===id):null}
+function lastPlanDay(){
+  for(const id of sortedIds()){ if(workouts[id].planDay) return workouts[id].planDay; }
+  return null;
+}
+function weekStart(d){const t=new Date((d||today())+"T00:00:00");const k=(t.getDay()+6)%7;t.setDate(t.getDate()-k);
+  t.setMinutes(t.getMinutes()-t.getTimezoneOffset());return t.toISOString().slice(0,10)}
+function doneThisWeek(id){
+  const ws=weekStart();
+  for(const wid of sortedIds()){const w=workouts[wid];if(w.date>=ws&&w.planDay===id)return w.date}
+  return null;
+}
+function weekCount(){const ws=weekStart();return sortedIds().filter(i=>workouts[i].date>=ws&&workouts[i].planDay).length}
+function lastDoneDay(id){
+  for(const wid of sortedIds()) if(workouts[wid].planDay===id) return workouts[wid].date;
+  return null;
+}
+function nextPlanDay(){
+  if(!HAVEP)return null;
+  const last=lastPlanDay();
+  if(!last)return PROGRAM.days[0];
+  const i=PROGRAM.days.findIndex(d=>d.id===last);
+  return PROGRAM.days[(i+1)%PROGRAM.days.length];
+}
+function lastDone(code){
+  for(const id of sortedIds()){
+    if(id===autoId)continue;                 // своя же автозапись за сегодня не может быть «прошлым разом»
+    const w=workouts[id]; const e=(w.entries||[]).find(x=>x.code===code&&x.sets&&x.sets.length);
+    if(e)return{date:w.date,e};
+  }
+  return null;
+}
+function repRange(r){const m=String(r).match(/(\d+)\s*[–-]\s*(\d+)/);if(m)return[+m[1],+m[2]];const o=String(r).match(/\d+/);return o?[+o[0],+o[0]]:[null,null]}
+function nearIdx(lad,a){let bi=0,bd=Infinity;lad.forEach((x,i)=>{const d=Math.abs(x-a);if(d<bd-1e-9){bd=d;bi=i}});return bi}
+function snapW(code,w){const lad=ladderFor(code);if(!lad||w==null||isNaN(w))return w;return lad[nearIdx(lad,Math.abs(w))]}
+function offLadder(code,w){const lad=ladderFor(code);if(!lad||w==null||isNaN(w))return null;
+  const a=Math.abs(w); if(lad.some(x=>Math.abs(x-a)<1e-6))return null;
+  const i=nearIdx(lad,a); return [lad[Math.max(i-(lad[i]>a?1:0),0)],lad[Math.min(i+(lad[i]<a?1:0),lad.length-1)]];}
+function stepW(code,w,up){
+  const lad=ladderFor(code); const a=Math.abs(w);
+  if(!lad)return w;
+  const i=nearIdx(lad,a);
+  const j=up?Math.min(i+1,lad.length-1):Math.max(i-1,0);
+  return lad[j];
+}
+/* пересчёт цели по прошлому результату */
+const DELOAD=profile?.deload || {};
+function inDeload(d){d=d||today();return d>=DELOAD.from&&d<=DELOAD.to}
+function computeTarget(it,dateCtx){
+  const out={sets:it.sets,reps:it.reps,w:it.w,rir:it.rir,warm:it.warm,note:it.note,why:""};
+  if(!HAVEP)return out;
+  if(inDeload(dateCtx)){                       // разгрузка: объём пополам, вес тот же, останавливаемся раньше
+    const L0=lastDone(it.code);
+    if(L0){const ps0=L0.e.sets.map(parseSet).filter(x=>x.free===undefined&&x.w!=="")
+             .map(x=>parseFloat(String(x.w).replace(",",".")));
+      if(ps0.length&&it.w!=null)out.w=snapW(it.code,Math.max(...ps0.map(Math.abs)))*(it.w<0?-1:1);}
+    out.sets=Math.max(1,Math.ceil(it.sets/2));
+    out.reps=String(it.reps).match(/^\s*(\d+)/)?String(it.reps).match(/^\s*(\d+)/)[1]:it.reps;
+    out.rir=(it.rir==null?3:Math.min(it.rir+2,4));
+    out.why="разгрузочная неделя — половина объёма, вес прежний";
+    applyWarm(it,out);
+    return out;
+  }
+  if(!/^\s*\d+(\s*[–-]\s*\d+)?\s*$/.test(String(it.reps)))return out;   // «до 60 суммарно» и т.п. не пересчитываем
+  const L=lastDone(it.code); if(!L){applyWarm(it,out);return out}
+  const ps=L.e.sets.map(parseSet).filter(p=>p.free===undefined);
+  if(!ps.length)return out;
+  const [lo,hi]=repRange(it.reps);
+  const reps=ps.map(p=>+p.r).filter(x=>x>0);
+  const minRep=reps.length?Math.min(...reps):null;
+  const ws=ps.map(p=>p.w===""?null:Math.abs(parseFloat(String(p.w).replace(",",".")))).filter(x=>x!=null&&!isNaN(x));
+  const lastW=ws.length?snapW(it.code,Math.max(...ws)):null;
+  const assist=(it.w!=null&&it.w<0);
+  out.prev=`${fmt(L.date)}: ${L.e.sets.join("  ")}${L.e.rir!=null?` · RIR ${L.e.rir}`:""}`;
+  if(it.w!=null&&lastW==null){          // раньше делал без отягощения — сравнивать не с чем
+    out.why=`раньше делал без веса — начинаем с ${nk(Math.abs(it.w))} кг`;
+    applyWarm(it,out);
+    return out;
+  }
+  if(it.hold&&today()<it.hold){         // новое движение: сначала техника, вес держим
+    out.why=`держим вес до ${fmt(it.hold)} — сначала техника`;
+    applyWarm(it,out);
+    return out;
+  }
+  /* снижение держим, пока фактический вес заметно выше планового;
+     подошёл вплотную — своё дело оно сделало, дальше обычная прогрессия */
+  if(it.down&&it.w!=null&&lastW!=null&&Math.abs(lastW)>Math.abs(it.w)*1.25){
+    out.why=`вес снижен намеренно — держим ${nk(Math.abs(it.w))}, пока не уйдёт раскачка`;
+    applyWarm(it,out);
+    return out;                          // иначе прогрессия вернёт старый тяжёлый вес
+  }
+  const rir=L.e.rir, pr=it.rir;
+  let w=(lastW!=null&&it.w!=null)?lastW:it.w, tgt=minRep||lo, why="";
+  const bump=()=>{ if(it.w==null){tgt=(minRep||lo)+1;why="плюс повторение";return}
+                   w=stepW(it.code,w,!assist); tgt=lo; why=assist?"меньше помощи":"диапазон добит — плюс вес"; };
+  if(rir!=null&&pr!=null&&rir<pr){ tgt=minRep||lo; why=`прошлый раз RIR ${rir} — повторяем вес`; }
+  else if(rir!=null&&pr!=null&&rir>pr){
+    if(hi&&minRep&&minRep<hi){ tgt=hi; why=`RIR ${rir} — сразу к верху диапазона`; }
+    else bump();
+  } else {
+    if(hi&&minRep&&minRep<hi){ tgt=(minRep||lo)+1; why="плюс повторение"; }
+    else bump();
+  }
+  out.reps=(hi&&tgt<hi)?`${tgt} (цель ${hi})`:String(tgt);
+  out.repsNum=tgt;
+  if(it.w!=null)out.w=assist?-Math.abs(w):w;
+  out.why=why; out.prev=`${fmt(L.date)}: ${L.e.sets.join("  ")}${L.e.rir!=null?` · RIR ${L.e.rir}`:""}`;
+  applyWarm(it,out);
+  return out;
+}
+function applyWarm(it,out){                 // разминочный вес считаем от текущего рабочего
+  if(!it.warmPct||out.w==null)return;
+  const ww=snapW(it.code,Math.abs(out.w)*it.warmPct);
+  out.warm=`${nk(ww)}×${it.warmReps||10}`+(out.w<0?" (больше облегчения)":"");
+}
+function planTarget(it){
+  const p=[]; p.push(`${it.sets}×${it.reps}`);
+  if(it.w!=null)p.push(`${it.w<0?"помощь "+Math.abs(it.w):it.w} кг`);
+  if(it.rir!=null)p.push(`RIR ${it.rir}`);
+  return p.join(" · ");
+}
+function planFill(it){
+  if(it.w==null)return it.repsNum?String(it.repsNum):"";
+  const r=it.repsNum||String(it.reps).match(/\d+/)[0];
+  return joinSet(it.w,r);
+}
+async function loadPlan(day){
+  if(!day)return;
+  if(cur.length&&!(await ask(`Заменить текущий список программой ${day.id}?`,"Заменить")))return;
+  cur=day.items.map(it=>{const pl=computeTarget(it);
+    const f=planFill(pl); return {code:it.code,sets:Array(pl.sets).fill(f),plan:pl,pre:f?true:false}});
+  curDay=day.id; swapFor=null; renderLog(); renderPlanBar(); renderDeload(); renderWarm(); saveDraft();
+  toast(`${day.id} — ${day.name}. Бледные цифры — план, поправь под факт.`);
+}
+function fillFromPlan(i){
+  const e=cur[i]; if(!e.plan)return;
+  e.sets=e.sets.map(s=>s||planFill(e.plan)); e.pre=true;
+  renderLog(); saveDraft();
+}
+function confirmEx(i){cur[i].pre=false;renderLog();saveDraft()}
+function fillAllFromPlan(){cur.forEach((e,i)=>{if(e.plan)fillFromPlan(i)});toast("Подставил план — поправь, где было иначе")}
+const PROG_START=PROGRAM?.startedAt || "";
+function ascIds(){return sortedIds().slice().reverse()}
+function numOf(id){const i=ascIds().indexOf(id);return i<0?null:i+1}
+function isProg(id){const w=workouts[id];return !!(w&&w.planDay&&w.date>=PROG_START)}
+function progNoOf(id){const a=ascIds().filter(isProg);const i=a.indexOf(id);return i<0?null:i+1}
+function weekNoOf(id){const w=workouts[id];if(!w)return null;
+  const ws=weekStart(w.date);
+  const b=ascIds().filter(x=>weekStart(workouts[x].date)===ws);
+  const i=b.indexOf(id);return i<0?null:i+1}
+function totalCount(){return ascIds().length}
+function progCount(){return ascIds().filter(isProg).length}
+
+/* будущие тренировки: продолжение ротации от следующей */
+function futureDays(n,startId){
+  if(!HAVEP)return [];
+  const out=[]; let d=(startId&&dayById(startId))||nextPlanDay(); if(!d)return out;
+  let i=PROGRAM.days.findIndex(x=>x.id===d.id);
+  for(let k=0;k<n;k++){ out.push(PROGRAM.days[(i+k)%PROGRAM.days.length]); }
+  return out;
+}
+function wcardPast(id){
+  const w=workouts[id], d=w.planDay?dayById(w.planDay):null;
+  const pn=progNoOf(id), wn=weekNoOf(id);
+  return `<button class="wcard done" data-past="${esc(id)}">
+    <div class="no"><span>№${numOf(id)}</span>${pn?`<span class="nbadge">н${pn}</span>`:""}</div>
+    <div class="nm">${esc(d?d.name:"своя тренировка")}</div>
+    <div class="sub">${fmt(w.date)}${wn?` · ${wn}-я на неделе`:""}</div></button>`;
+}
+function wcardFuture(day,k,curSel,baseNo,basePn){
+  const no=baseNo+k, pn=basePn+k;
+  const cls="wcard"+(k===0?" next":"")+(curSel?" cur":"");
+  return `<button class="${cls}" data-fut="${esc(day.id)}">
+    <div class="no"><span>№${no}</span><span class="nbadge">н${pn}</span></div>
+    <div class="nm">${esc(day.name)}</div>
+    <div class="sub">${k===0?(curSel?"взята сейчас":"следующая"):"по плану"}</div></button>`;
+}
+function renderPlanBar(){
+  if(!HAVEP){$("#planBar").classList.add("hidden");return}
+  const past=sortedIds().filter(i=>i!==autoId).slice(0,4).reverse();   // свою незавершённую в «прошлые» не кладём
+  const fut=futureDays(4,curDay);
+  const live=autoId&&workouts[autoId];                                   // уже легла автозаписью — номер у неё свой
+  const nextNo=live?numOf(autoId):totalCount()+1;
+  const nextPn=live?(progNoOf(autoId)||progCount()+1):progCount()+1;
+
+  if(curDay){
+    const d=dayById(curDay);
+    $("#planLead").textContent=`Пишем тренировку №${nextNo}`;
+    $("#planNext").textContent=`н${nextPn} — ${d?d.name:curDay}`;
+    $("#planWhy").textContent="Номер на неделе проставится при сохранении";
+    $("#loadPlan").textContent="Заполнить планом";
+    $("#loadPlan").onclick=fillAllFromPlan;
+  }else{
+    const n=fut[0];
+    $("#planLead").textContent="Следующая";
+    $("#planNext").textContent=n?`№${nextNo} · н${nextPn} — ${n.name}`:`№${nextNo}`;
+    const lastId=sortedIds()[0];
+    $("#planWhy").textContent=lastId
+      ? `Последняя — №${numOf(lastId)}, ${fmt(workouts[lastId].date)}`
+      : "Первая тренировка";
+    $("#loadPlan").textContent="Взять";
+    $("#loadPlan").onclick=()=>loadPlan(n);
+  }
+  $("#planPick").innerHTML =
+      past.map(wcardPast).join("")
+    + (past.length&&fut.length?'<div class="wsep"></div>':"")
+    + fut.map((d,k)=>wcardFuture(d,k,curDay===d.id&&k===0,nextNo,nextPn)).join("")
+    + (curDay?'<button class="wcard" id="dropDay"><div class="no">&nbsp;</div><div class="nm">Убрать план</div><div class="sub">писать свободно</div></button>':"");
+
+  $("#planPick").querySelectorAll("[data-fut]").forEach(b=>b.onclick=()=>showFuture(b.dataset.fut));
+  $("#planPick").querySelectorAll("[data-past]").forEach(b=>b.onclick=()=>showPast(b.dataset.past));
+  const dd=$("#dropDay"); if(dd)dd.onclick=()=>{curDay=null;cur.forEach(e=>delete e.plan);renderLog();renderPlanBar();renderWarm();saveDraft()};
+  const el=$("#planPick"); if(el)el.scrollLeft=Math.max(0,past.length*140-70);
+}
+/* предпросмотр будущей — только чтение, черновик не создаётся */
+function showFuture(dayId){
+  const d=dayById(dayId); if(!d)return;
+  const fut=futureDays(4), k=Math.max(0,fut.findIndex(x=>x.id===dayId));
+  const no=totalCount()+1+k, pn=progCount()+1+k;
+  $("#sheetIn").innerHTML=`<div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h3>№${no} · н${pn} — ${esc(d.name)}</h3><div class="mut">${k===0?"следующая по программе":"через "+k+" после ближайшей"}</div></div>
+      <button class="btn sm ghost" id="sheetX">Закрыть</button></div>
+    <p class="mut" style="margin:8px 0 0;font-size:13px">Это просмотр. Запись не создаётся, пока не нажмёшь «Взять на тренировку».</p>
+    <table class="ptab" style="width:100%;border-collapse:collapse;margin-top:8px">
+    ${d.items.map(it=>{const c=byCode(it.code),t=computeTarget(it);
+      return `<tr><td style="padding:5px 4px;border-bottom:1px solid var(--line);font-weight:800;color:var(--acc);white-space:nowrap">${esc(it.code)}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid var(--line)">${esc(c&&c.name||"")}${t.why?`<div class="mut">↗ ${esc(t.why)}</div>`:""}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;color:var(--mut)">${esc(planTarget(t))}</td></tr>`}).join("")}
+    </table>
+    <div class="row" style="margin-top:12px;gap:8px"><button class="btn pri" id="futTake" style="flex:1">Взять на тренировку</button></div>`;
+  $("#sheet").classList.remove("hidden");
+  $("#sheetX").onclick=closeTech;
+  $("#futTake").onclick=()=>{closeTech();loadPlan(d);switchTab("log")};
+}
+/* черновик со вчерашней датой: сам по себе в статистику попасть не должен */
+function draftTouched(){
+  return cur.some(e=>(e.rir!=null)||(!e.pre&&(e.sets||[]).some(Boolean)));
+}
+function renderStale(){
+  const box=$("#staleBox"); if(!box)return;
+  const d=$("#date").value, t=today();
+  if(!cur.length||!d||d>=t){box.innerHTML="";return}
+  box.innerHTML=`<div class="stale"><b>Дата записи — ${fmt(d)}</b>, а сегодня ${fmt(t)}. Так и сохранится, прошедшим числом.
+    <div class="row" style="margin-top:8px;gap:8px"><button class="btn sm pri" id="stNow">Поставить ${fmt(t)}</button>
+    <button class="btn sm ghost" id="stKeep">Так и надо</button></div></div>`;
+  $("#stNow").onclick=()=>{$("#date").value=t;saveDraft();renderStale();renderLog()};
+  $("#stKeep").onclick=()=>{box.innerHTML=""};
+}
+/* черновик, забытый со вчера и не тронутый, переносим на сегодня — но только один раз,
+   при запуске. Дальше дату решает человек: выставленную вручную не трогаем. */
+function rollStaleDraft(){
+  const d=$("#date").value, t=today();
+  if(cur.length&&d&&d<t&&!draftTouched()){$("#date").value=t;saveDraft()}
+}
+
+/* просмотр прошлой тренировки — только чтение, черновик не трогаем */
+function showPast(id){
+  const w=workouts[id]; if(!w)return;
+  const d=w.planDay?dayById(w.planDay):null, pn=progNoOf(id), wn=weekNoOf(id);
+  $("#sheetIn").innerHTML=`<div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h3>№${numOf(id)}${pn?` · н${pn}`:""} — ${esc(d?d.name:"своя тренировка")}</h3>
+      <div class="mut">${fmt(w.date)}${wn?` · ${wn}-я на неделе`:""}</div></div>
+      <button class="btn sm ghost" id="sheetX">Закрыть</button></div>
+    ${(w.entries||[]).map(e=>`<div class="hist-l"><span>${esc(e.code)}</span>${esc((e.sets||[]).join("  "))}${e.insteadOf?` <span class="mut">(вместо ${esc(e.insteadOf)})</span>`:""}${e.rir!=null?` <span class="mut">RIR ${e.rir}</span>`:""}</div>`).join("")}
+    <div class="row" style="margin-top:12px"><button class="btn sm" id="pastEdit">Изменить</button></div>`;
+  $("#sheet").classList.remove("hidden");
+  $("#sheetX").onclick=closeTech;
+  $("#pastEdit").onclick=()=>{closeTech();switchTab("hist")};
+}
+
+/* ---------- техника ---------- */
+function openTech(code){
+  const t=HAVEP?TECH[code]:null, c=byCode(code), sv=(HAVEP&&SVG[code])||"";
+  $("#sheetIn").innerHTML=`<div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h3>${esc(code)} · ${esc(c&&c.name||"")}</h3><div class="mut">${esc(c&&c.group||"")}</div></div>
+      <button class="btn sm ghost" id="sheetX">Закрыть</button></div>
+    ${sv ? '<img alt="Схема упражнения" style="max-width:340px;width:100%" src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(sv)+'">' : ""}
+    ${t?`<p style="margin:10px 0 0;font-size:14px">${esc(t.h)}</p>`:'<p class="mut" style="margin:10px 0 0">Описание техники пока не заполнено.</p>'}
+    ${t&&t.c&&t.c.length?`<ul class="cues">${t.c.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+    ${t&&t.stop?`<div class="stopbox"><b>Когда остановиться.</b> ${esc(t.stop)}<br><span class="mut">Это и есть конец подхода — раньше, чем кончатся силы. Дальше упражнение делает уже не та мышца.</span></div>`:""}
+    ${t&&t.m?`<div class="warnbox"><b>Частая ошибка.</b> ${esc(t.m)}</div>`:""}
+    <div class="row" style="margin-top:12px"><a class="btn sm" target="_blank" rel="noopener"
+       href="https://www.youtube.com/results?search_query=${encodeURIComponent((c&&c.name||code)+" техника выполнения")}">Найти видео</a></div>`;
+  $("#sheet").classList.remove("hidden");
+  $("#sheetX").onclick=closeTech;
+}
+function closeTech(){$("#sheet").classList.add("hidden");$("#sheetIn").innerHTML=""}
+function ask(text,okLabel){
+  return new Promise(res=>{
+    $("#sheetIn").innerHTML=`<h3 style="margin-bottom:8px">Подтверди</h3><p style="font-size:14px;margin:0 0 14px;white-space:pre-line">${esc(text)}</p>
+      <div class="row" style="gap:8px"><button class="btn pri" id="askYes" style="flex:1">${esc(okLabel||"Да")}</button><button class="btn ghost" id="askNo" style="flex:1">Отмена</button></div>`;
+    $("#sheet").classList.remove("hidden");
+    $("#askYes").onclick=()=>{closeTech();res(true)};
+    $("#askNo").onclick=()=>{closeTech();res(false)};
+  });
+}
+$("#sheet").onclick=e=>{if(e.target.id==="sheet")closeTech()};
+$("#restBar").onclick=stopRest;
+
+/* ---------- замена на аналог ---------- */
+function useCount(){
+  const u={};
+  for(const id of sortedIds())for(const e of (workouts[id].entries||[]))u[e.code]=(u[e.code]||0)+1;
+  return u;
+}
+function analogues(code){
+  const c=byCode(code), g=c&&c.group, u=useCount(), inWorkout=cur.map(x=>x.code);
+  const pool=codes.filter(x=>x.code!==code&&!inWorkout.includes(x.code));
+  const same=pool.filter(x=>g&&x.group===g);
+  return (same.length?same:pool).sort((a,b)=>(u[b.code]||0)-(u[a.code]||0)).slice(0,8);
+}
+function doSwap(i,newCode){
+  const e=cur[i], orig=e.insteadOf||e.code, l=lastSets(newCode,$("#date").value);
+  cur[i]={code:newCode,sets:l?[...l.sets]:[""]};
+  if(orig!==newCode)cur[i].insteadOf=orig;
+  swapFor=null; renderLog(); saveDraft();
+  toast(orig===newCode?`Вернул ${newCode}`:`${newCode} вместо ${orig}`);
+}
+function swapPanel(i){
+  const e=cur[i], list=analogues(e.code);
+  return `<div class="swapbox">
+    <div class="mut" style="margin-bottom:6px">Чем заменяешь ${esc(e.code)}?</div>
+    <div>${list.map(c=>`<button class="chip" data-pick="${i}|${esc(c.code)}"><b>${esc(c.code)}</b>${esc(c.name.slice(0,26))}</button>`).join("")||'<span class="mut">Аналогов в справочнике нет</span>'}</div>
+    <input data-ssearch="${i}" placeholder="или найди любое упражнение" style="width:100%;margin-top:8px" autocomplete="off">
+    <div class="list hidden" data-sres="${i}"></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm ghost" data-scancel="1">Отмена</button></div>
+  </div>`;
+}
+
+function ladHintFor(e){
+  for(const s of e.sets){
+    const p=parseSet(s); if(p.free!==undefined||p.w==="")continue;
+    const v=parseFloat(String(p.w).replace(",",".")); if(isNaN(v))continue;
+    const o=offLadder(e.code,v);
+    if(o)return `${nk(Math.abs(v))} на этом стеке нет — ближайшие ${nk(o[0])} и ${nk(o[1])}`;
+  }
+  return "";
+}
+function updLadHint(i){
+  const el=document.querySelector(`[data-lh="${i}"]`); if(!el)return;
+  const t=ladHintFor(cur[i]);
+  el.textContent=t; el.style.display=t?"":"none";
+}
+
+/* ---------- таймер отдыха ---------- */
+let restEnd=0, restLabel="", restTick=null, restBuzzed=false;
+function startRest(i,k){
+  if(editingId||!HAVEP)return;                      // правку прошлой тренировки не таймим
+  const e=cur[i]; if(!e)return;
+  const secs=restFor(e.code); if(!secs)return;
+  restEnd=Date.now()+secs*1000; restBuzzed=false;
+  const c=byCode(e.code);
+  restLabel=`${e.code}${c?" · "+c.name:""} · подход ${k+1}`;
+  ss("fitnessAndroid.rest",{end:restEnd,label:restLabel});
+  runRest();
+}
+function runRest(){ clearInterval(restTick); drawRest(); restTick=setInterval(drawRest,250); }
+function stopRest(){ clearInterval(restTick); restTick=null; restEnd=0;
+  try{localStorage.removeItem("fitnessAndroid.rest")}catch(e){}
+  const bar=$("#restBar"); if(bar)bar.classList.add("hidden"); }
+function drawRest(){
+  const bar=$("#restBar"); if(!bar)return;
+  if(!restEnd){bar.classList.add("hidden");return}
+  const left=Math.round((restEnd-Date.now())/1000);
+  if(left<-45){stopRest();return}                   // сам убирается через 45 с после сигнала
+  bar.classList.remove("hidden");
+  if(left>0){
+    bar.className="restbar";
+    bar.innerHTML=`<span class="rt">${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}</span>`
+      +`<span class="rl">отдых · ${esc(restLabel)}</span>`;
+  }else{
+    if(!restBuzzed){restBuzzed=true;try{navigator.vibrate&&navigator.vibrate([180,90,180])}catch(e){}}
+    bar.className="restbar done";
+    bar.innerHTML=`<span class="rt">Пора</span><span class="rl">${esc(restLabel)} — следующий подход</span>`;
+  }
+}
+function restoreRest(){
+  const r=ls("fitnessAndroid.rest",null); if(!r||!r.end)return;
+  if(Date.now()-r.end>45000){try{localStorage.removeItem("fitnessAndroid.rest")}catch(e){}return}
+  restEnd=r.end; restLabel=r.label||""; restBuzzed=Date.now()>r.end; runRest();
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&restEnd)drawRest()});
+
+/* ---------- render: log ---------- */
+function renderLog(){
+  const box=$("#exs"), d=$("#date").value;
+  if(!cur.length){box.innerHTML='<div class="card mut">Добавь упражнение через поиск ниже или выбери тренировку в «как в прошлый раз».</div>'}
+  else box.innerHTML=cur.map((e,i)=>{
+    const c=byCode(e.code), last=lastSets(e.code,d), free=isFree(e), asst=!free&&isAssist(e.code);
+    if(!e.sets.length)e.sets=[""];
+    const rows=e.sets.map((s,k)=>{
+      const p=parseSet(s);
+      if(free)return `<input class="freein" data-i="${i}" data-k="${k}" data-f="free" value="${esc(p.free!==undefined?p.free:joinSet(p.w,p.r))}" placeholder="подход ${k+1}">`;
+      const wv=asst?String(p.w||"").replace(/^-/,""):p.w;
+      return `<span class="setg${e.pre?" pre":""}"><span class="setn">${k+1}</span><input data-i="${i}" data-k="${k}" data-f="w" inputmode="decimal" value="${esc(wv)}"><span class="mul">×</span><input data-i="${i}" data-k="${k}" data-f="r" inputmode="numeric" value="${esc(p.r)}"></span>`;
+    }).join("");
+    const pl=e.plan;
+    const ladHint=free?"":ladHintFor(e);
+    return `<div class="card"><div class="ex-h"><div><span class="code">${esc(e.code)}</span> ${esc(e.name||c&&c.name||"")}
+      <button class="qbtn" data-tech="${esc(e.code)}" title="Техника">?</button>
+      ${e.insteadOf?`<div style="margin-top:4px"><span class="badge">вместо ${esc(e.insteadOf)}</span> <button class="btn sm ghost" data-revert="${i}">вернуть</button></div>`:""}</div>
+      <div style="white-space:nowrap"><button class="x" data-up="${i}"${i===0?" disabled style=opacity:.3":""}>↑</button><button class="x" data-down="${i}"${i===cur.length-1?" disabled style=opacity:.3":""}>↓</button><button class="x" data-del="${i}">✕</button></div></div>
+      ${pl?`<div class="planline">План: <b>${esc(planTarget(pl))}</b>${pl.warm?` · разминка ${esc(pl.warm)}`:""}</div>${pl.why?`<div class="hint" style="margin:-2px 0 6px">↗ ${esc(pl.why)}</div>`:""}${pl.note?`<div class="hint" style="margin:-2px 0 6px">${esc(pl.note)}</div>`:""}`:""}
+      ${free?"":`<div class="setlab">${asst?"помощь, кг":"кг"} × повторы</div>`}
+      <div class="sets">${rows}</div>
+      <div class="hint" data-lh="${i}" style="color:var(--warn)${ladHint?"":";display:none"}">${esc(ladHint)}</div>
+      ${(HAVEP&&TECH[e.code]&&TECH[e.code].stop)?`<div class="stopline"><b>Стоп:</b><span>${esc(TECH[e.code].stop)}</span></div>`:""}
+      ${free?"":`<div class="rirrow"><span class="lab">Осталось в запасе${pl&&pl.rir!=null?`, план ${pl.rir}`:""}:</span>${[3,2,1,0].map(v=>`<button class="rir${e.rir===v?" on":""}" data-rir="${i}|${v}">${v}</button>`).join("")}<button class="qbtn" data-rirhelp="1">?</button></div>`}
+      <div class="row" style="gap:6px">
+        <button class="btn sm ghost" data-addset="${i}">+ подход</button>
+        ${e.sets.length>1?`<button class="btn sm ghost" data-rmset="${i}">− подход</button>`:""}
+        ${e.pre?`<button class="btn sm pri" data-ok="${i}">✓ Сделал как в плане</button>`:(pl&&pl.w!=null?`<button class="btn sm ghost" data-fill="${i}">Как в плане</button>`:"")}
+        ${last?`<button class="btn sm ghost" data-copy="${i}">Как ${fmt(last.date)}</button>`:""}
+        <button class="btn sm ghost" data-swap="${i}">Заменить</button>
+      </div>
+      ${swapFor===i?swapPanel(i):""}
+      ${last?`<div class="hint">${fmt(last.date)}: ${esc(last.sets.join("  "))}</div>`:'<div class="hint">Раньше не делал — введи значения.</div>'}</div>`;
+  }).join("");
+
+  box.querySelectorAll("input[data-i]").forEach(inp=>inp.addEventListener("input",()=>{
+    const i=+inp.dataset.i,k=+inp.dataset.k,e=cur[i];
+    if(e.pre){e.pre=false;const g0=box.querySelectorAll(`input[data-i="${i}"]`);g0.forEach(x=>{const gg=x.closest(".setg");if(gg)gg.classList.remove("pre")});
+      const bb=box.querySelector(`[data-ok="${i}"]`); if(bb){bb.className="btn sm ghost";bb.textContent="Как в плане";bb.dataset.fill=i;bb.removeAttribute("data-ok");bb.onclick=()=>fillFromPlan(i)}}
+    while(e.sets.length<=k)e.sets.push("");
+    if(inp.dataset.f==="free"){e.sets[k]=inp.value.trim()}
+    else{
+      const g=inp.closest(".setg");
+      let w=g.querySelector('[data-f="w"]').value.trim().replace(",",".");
+      const r=g.querySelector('[data-f="r"]').value.trim();
+      if(w&&isAssist(e.code)&&w[0]!=="-")w="-"+w;
+      e.sets[k]=joinSet(w,r);
+      updLadHint(i);
+    }
+    if(String(e.sets[k]||"").trim())startRest(i,k);   // отсчёт стартует заново с каждым вводом
+    saveDraft();
+  }));
+  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{cur.splice(+b.dataset.del,1);renderLog();saveDraft()});
+  box.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{const i=+b.dataset.up;if(i>0){[cur[i-1],cur[i]]=[cur[i],cur[i-1]];renderLog();saveDraft()}});
+  box.querySelectorAll("[data-down]").forEach(b=>b.onclick=()=>{const i=+b.dataset.down;if(i<cur.length-1){[cur[i+1],cur[i]]=[cur[i],cur[i+1]];renderLog();saveDraft()}});
+  box.querySelectorAll("[data-addset]").forEach(b=>b.onclick=()=>{
+    const e=cur[+b.dataset.addset];
+    if(e.sets.length>=MAXS){toast("Больше 8 подходов не помещается");return}
+    e.sets.push([...e.sets].reverse().find(Boolean)||"");
+    renderLog();saveDraft();
+  });
+  box.querySelectorAll("[data-rmset]").forEach(b=>b.onclick=()=>{const e=cur[+b.dataset.rmset];if(e.sets.length>1){e.sets.pop();renderLog();saveDraft()}});
+  box.querySelectorAll("[data-fill]").forEach(b=>b.onclick=()=>fillFromPlan(+b.dataset.fill));
+  box.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>confirmEx(+b.dataset.ok));
+  box.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>{const i=+b.dataset.copy,l=lastSets(cur[i].code,$("#date").value);if(l){cur[i].sets=[...l.sets];renderLog();saveDraft()}});
+  box.querySelectorAll("[data-tech]").forEach(b=>b.onclick=()=>openTech(b.dataset.tech));
+  box.querySelectorAll("[data-rirhelp]").forEach(b=>b.onclick=()=>{
+    $("#sheetIn").innerHTML=`<div class="row" style="justify-content:space-between"><h3>Запас (RIR)</h3><button class="btn sm ghost" id="sheetX">Закрыть</button></div>
+      <p style="font-size:14px">Сколько ещё <b>чистых</b> повторений ты мог бы сделать, когда закончил подход. Нажми цифру сразу после подхода — одно касание.</p>
+      <ul class="cues"><li><b>3</b> — было легко, вес мал</li><li><b>2</b> — рабочий режим, так живём первые 6 недель</li><li><b>1</b> — почти предел, последний подход базовых</li><li><b>0</b> — отказ, специально не ищем</li></ul>
+      <div class="warnbox">Если следующее повторение пришлось бы делать с рывком или раскачкой — подход уже закончен, и это не отказ мышцы, а отказ техники.</div>`;
+    $("#sheet").classList.remove("hidden"); $("#sheetX").onclick=closeTech;
+  });
+  box.querySelectorAll("[data-rir]").forEach(b=>b.onclick=()=>{const[i,v]=b.dataset.rir.split("|");cur[+i].rir=(cur[+i].rir===+v)?undefined:+v;cur[+i].pre=false;renderLog();saveDraft()});
+  box.querySelectorAll("[data-swap]").forEach(b=>b.onclick=()=>{const i=+b.dataset.swap;swapFor=(swapFor===i)?null:i;renderLog()});
+  box.querySelectorAll("[data-scancel]").forEach(b=>b.onclick=()=>{swapFor=null;renderLog()});
+  box.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const[i,code]=b.dataset.pick.split("|");doSwap(+i,code)});
+  box.querySelectorAll("[data-revert]").forEach(b=>b.onclick=()=>{const i=+b.dataset.revert;doSwap(i,cur[i].insteadOf)});
+  box.querySelectorAll("[data-ssearch]").forEach(inp=>inp.addEventListener("input",()=>{
+    const i=+inp.dataset.ssearch, q=norm(inp.value), r=box.querySelector(`[data-sres="${i}"]`);
+    if(!q){r.classList.add("hidden");return}
+    const inW=cur.map(x=>x.code), hits=codes.filter(c=>c.code!==cur[i].code&&!inW.includes(c.code)&&(norm(c.code).startsWith(q)||norm(c.name).includes(q)||norm(c.alias).includes(q))).slice(0,10);
+    r.innerHTML=hits.map(c=>`<div data-pick2="${i}|${esc(c.code)}"><span class="code">${esc(c.code)}</span> ${esc(c.name)}</div>`).join("")||'<div class="mut">Ничего не нашлось</div>';
+    r.classList.remove("hidden");
+    r.querySelectorAll("[data-pick2]").forEach(d=>d.onclick=()=>{const[j,code]=d.dataset.pick2.split("|");doSwap(+j,code)});
+  }));
+  syncSaveBar();
+  $("#editNote").classList.toggle("hidden",!editingId);
+  if(editingId)$("#editNote").textContent=`Редактируешь тренировку ${fmt((workouts[editingId]||{}).date||$("#date").value)}. Сохранение перезапишет её.`;
+}
+
+function renderTpls(){
+  if(!$("#tpls"))return;
+  const d=$("#date").value, seen=new Set(), out=[];
+  for(const id of sortedIds()){
+    if(id===editingId)continue;
+    const w=workouts[id];
+    if(d&&w.date>=d)continue;
+    const key=(w.entries||[]).map(e=>e.code).slice(0,3).join(",");
+    if(!key||seen.has(key))continue;
+    seen.add(key); out.push(id); if(out.length>=4)break;
+  }
+  $("#tplHead").textContent=d?`Последние тренировки до ${fmt(d)}`:"Как в прошлый раз";
+  $("#tpls").innerHTML=out.length
+    ? out.map(id=>{const w=workouts[id];return `<button class="chip" data-tpl="${esc(id)}"><b>${fmt(w.date)}</b>${esc((w.entries||[]).map(e=>e.code).join(" "))}</button>`}).join("")
+    : "До этой даты тренировок нет";
+  $("#tpls").querySelectorAll("[data-tpl]").forEach(b=>b.onclick=async()=>{
+    const w=workouts[b.dataset.tpl];
+    if(cur.length&&!(await ask("Заменить текущий список упражнениями этой тренировки?","Заменить")))return;
+    cur=(w.entries||[]).map(e=>{
+      const l=lastSets(e.code,$("#date").value);
+      return {code:e.code,sets:l?[...l.sets]:[...(e.sets||[])]};
+    });
+    renderLog();saveDraft();toast("Подставлены упражнения и прошлые веса");
+  });
+}
+
+/* ---------- search ---------- */
+function addEx(code){
+  const l=lastSets(code,$("#date").value);
+  cur.push({code,sets:l?[...l.sets]:[""]});
+  $("#search").value="";$("#results").classList.add("hidden");renderLog();saveDraft();
+  setTimeout(()=>{const ins=document.querySelectorAll(`input[data-i="${cur.length-1}"]`);if(ins[0])ins[0].focus()},50);
+}
+$("#search").addEventListener("input",()=>{
+  const q=norm($("#search").value),r=$("#results");
+  if(!q){r.classList.add("hidden");return}
+  const hits=codes.filter(c=>norm(c.code).startsWith(q)||norm(c.name).includes(q)||norm(c.alias).includes(q)).slice(0,12);
+  r.innerHTML=hits.map(c=>`<div data-add="${esc(c.code)}"><span class="code">${esc(c.code)}</span> ${esc(c.name)} <span class="mut">· ${esc(c.group||"")}</span></div>`).join("")
+    +`<div data-new="1" class="mut">＋ Новый код «${esc($("#search").value.trim())}»</div>`;
+  r.classList.remove("hidden");
+  r.querySelectorAll("[data-add]").forEach(d=>d.onclick=()=>addEx(d.dataset.add));
+  r.querySelector("[data-new]").onclick=()=>{
+    const v=$("#search").value.trim(); switchTab("codes");
+    if(/^[A-Za-zА-Яа-яЁё]{1,5}$/.test(v))$("#nCode").value=v.toUpperCase(); else $("#nName").value=v;
+    $("#codeMsg").textContent="После добавления вернись на «Запись» — код появится в поиске.";
+  };
+});
+
+/* ---------- text mode ---------- */
+$("#modeBtn").onclick=()=>{const t=$("#textMode");t.classList.toggle("hidden");$("#modeBtn").textContent=t.classList.contains("hidden")?"Ввод текстом":"Скрыть текст"};
+$("#parseBtn").onclick=()=>{
+  const lines=$("#txt").value.split(/\n/).map(s=>s.trim()).filter(Boolean),bad=[];let n=0;
+  for(const line of lines){
+    const m=line.match(/^(\S+)\s*(.*)$/); if(!m)continue;
+    if(/^\d{1,2}[.\/]\d{1,2}([.\/]\d{2,4})?$/.test(m[1])){
+      const p=m[1].split(/[.\/]/), y=p[2]?(p[2].length===2?"20"+p[2]:p[2]):today().slice(0,4);
+      $("#date").value=`${y}-${p[1].padStart(2,"0")}-${p[0].padStart(2,"0")}`; continue;
+    }
+    const code=norm(m[1]);
+    if(!byCode(code)){bad.push(m[1]);continue}
+    let sets=[];
+    if(code==="КД") sets=m[2].split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+    else for(const tok of m[2].split(/\s+/).filter(Boolean)){
+      const rep=tok.match(/^[×xх*](\d+)$/i);
+      if(rep&&sets.length){for(let k=1;k<+rep[1];k++)sets.push(sets[sets.length-1])}
+      else sets.push(tok.replace(/\//g,"\\"));
+    }
+    cur.push({code,name:byCode(code).name,sets:sets.slice(0,MAXS)}); n++;
+  }
+  renderLog();saveDraft();
+  $("#parseMsg").innerHTML=`Добавлено: ${n}`+(bad.length?` · <span class="err">нет кода: ${esc(bad.join(", "))}</span>`:"");
+  if(!bad.length)$("#txt").value="";
+};
+
+/* ---------- save ---------- */
+$("#saveBtn").onclick=async()=>{
+  const date=$("#date").value;
+  if(!date){toast("Укажи дату");return}
+  const entries=cur.map(e=>{const o={code:e.code,sets:e.sets.filter(Boolean)};if(e.pre)o.fromPlan=1;if(e.insteadOf)o.insteadOf=e.insteadOf;if(e.rir!=null)o.rir=e.rir;if(e.plan)o.plan=e.plan;return o}).filter(e=>e.code);
+  if(!entries.length){toast("Нет упражнений");return}
+  const empty=entries.filter(e=>!e.sets.length).map(e=>e.code);
+  if(empty.length===entries.length){toast("Ни одного подхода не заполнено");return}
+  const pre=cur.filter(e=>e.pre&&e.sets.some(Boolean)).map(e=>e.code);
+  if(empty.length||pre.length){
+    const q=[];
+    if(pre.length)q.push(`Не подтверждено: ${pre.join(", ")} — там плановые цифры, которых ты не касался.`);
+    if(empty.length)q.push(`Без подходов: ${empty.join(", ")} — сохранятся как пропущенные.`);
+    if(!(await ask(q.join("\n\n")+"\n\nСохранить так?","Сохранить")))return;
+  }
+  let id=editingId||autoId;                       // автозапись этого же черновика дополняем, а не дублируем
+  if(id&&workouts[id]&&workouts[id].date!==date){deleted[id]=new Date().toISOString();delete workouts[id];delete dirty[id];id=null}
+  if(!id){id=date;let k=2;while(workouts[id])id=`${date}-${k++}`}
+  workouts[id]={date,entries,updatedAt:new Date().toISOString()};   // prov не переносим: запись стала подтверждённой
+  if(curDay)workouts[id].planDay=curDay;
+  dirty[id]=true; delete deleted[id];
+  const doneDay=curDay;
+  saveW(); cur=[]; editingId=null; autoId=null; swapFor=null; curDay=null; clearDraft(); stopRest(); $("#date").value=today();
+  renderAll();
+  toast(`Записана №${numOf(id)}${progNoOf(id)?" · н"+progNoOf(id):""}${weekNoOf(id)?", "+weekNoOf(id)+"-я на неделе":""}`);
+  
+};
+/* ---------- автозапись ---------- */
+/* Введённый факт не должен жить только в черновике: как только в записи есть
+   хоть один подход, она сама ложится в историю — незавершённой, с пометкой.
+   «Сохранить» эту же запись подтверждает, «Очистить» — убирает. */
+function autoCommit(){
+  if(!cur.length||!draftTouched())return;
+  const date=$("#date").value; if(!date)return;
+  const entries=cur.map(e=>{const o={code:e.code,sets:(e.sets||[]).filter(Boolean)};
+    if(e.pre)o.fromPlan=1; if(e.insteadOf)o.insteadOf=e.insteadOf;
+    if(e.rir!=null)o.rir=e.rir; if(e.plan)o.plan=e.plan; return o}).filter(e=>e.code&&e.sets.length);
+  if(!entries.length)return;
+  let id=editingId||autoId;
+  if(id&&workouts[id]&&workouts[id].date!==date){deleted[id]=new Date().toISOString();delete workouts[id];delete dirty[id];id=null}
+  if(!id){id=date;let k=2;while(workouts[id])id=`${date}-${k++}`}
+  const manual=!!(workouts[id]&&!workouts[id].prov);      // уже подтверждённую не разжаловываем обратно
+  workouts[id]={date,entries,updatedAt:new Date().toISOString()};
+  if(curDay)workouts[id].planDay=curDay;
+  if(!manual)workouts[id].prov=1;
+  dirty[id]=true; delete deleted[id];
+  if(!editingId)autoId=id;
+  saveW(); saveDraft(); renderHist(); renderPlanBar(); renderStats();
+}
+function dropProvisional(){
+  if(autoId&&workouts[autoId]&&workouts[autoId].prov){
+    deleted[autoId]=new Date().toISOString(); delete workouts[autoId]; delete dirty[autoId]; saveW();
+  }
+  autoId=null;
+}
+window.addEventListener("pagehide",autoCommit);
+document.addEventListener("visibilitychange",()=>{if(document.hidden){autoCommit();}});
+
+$("#clearBtn").onclick=async()=>{if(cur.length&&!(await ask("Очистить текущую запись?","Очистить")))return;dropProvisional();cur=[];editingId=null;swapFor=null;curDay=null;clearDraft();stopRest();$("#date").value=today();renderAll();};
+$("#date").addEventListener("change",()=>{renderTpls();renderLog();renderStale();renderPlanBar();saveDraft()});
+
+/* ---------- history ---------- */
+function renderHist(){
+  const ids=sortedIds(); $("#histCount").textContent=`Тренировок: ${ids.length}`;
+  $("#hist").innerHTML=ids.map(id=>{const w=workouts[id];
+    const d=w.planDay?dayById(w.planDay):null, pn=progNoOf(id), wn=weekNoOf(id);
+    return `<div class="card"><div class="hist-h"><b>№${numOf(id)}${pn?` <span class="badge">н${pn}</span>`:""} ${fmt(w.date)}${d?` · ${esc(d.name)}`:""}${wn?` <span class="mut" style="font-weight:400">${wn}-я на неделе</span>`:""}</b>${w.prov?' <span class="badge" style="background:var(--warn);color:var(--card)">не завершена</span>':""}
+      <span><button class="btn sm ghost" data-edit="${esc(id)}">Изменить</button><button class="btn sm ghost" data-rm="${esc(id)}">Удалить</button></span></div>
+      ${(w.entries||[]).map(e=>`<div class="hist-l"><span>${esc(e.code)}</span>${esc((e.sets||[]).join("  "))}${e.insteadOf?` <span class="mut">(вместо ${esc(e.insteadOf)})</span>`:""}${e.rir!=null?` <span class="mut">RIR ${e.rir}</span>`:""}</div>`).join("")}</div>`;
+  }).join("")||'<div class="card mut">Пока пусто.</div>';
+  $("#hist").querySelectorAll("[data-edit]").forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.edit,w=workouts[id];
+    if(cur.length&&!editingId&&!(await ask("В «Записи» есть несохранённое. Заменить?","Заменить")))return;
+    editingId=id;autoId=null;$("#date").value=w.date;cur=(w.entries||[]).map(e=>{const o={code:e.code,sets:[...(e.sets||[])]};if(e.insteadOf)o.insteadOf=e.insteadOf;if(e.rir!=null)o.rir=e.rir;if(e.plan)o.plan=e.plan;return o});curDay=w.planDay||null;
+    saveDraft();switchTab("log");renderLog();
+  });
+  $("#hist").querySelectorAll("[data-rm]").forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.rm; if(!(await ask(`Удалить тренировку ${fmt(workouts[id].date)}?`,"Удалить")))return;
+    delete workouts[id]; delete dirty[id]; deleted[id]=new Date().toISOString();
+    saveW(); renderAll(); toast("Удалено"); 
+  });
+}
+
+/* ---------- codes ---------- */
+function renderCodes(){
+  const groups=[...new Set(codes.map(c=>c.group||"Прочее"))];
+  $("#groups").innerHTML=groups.map(g=>`<option value="${esc(g)}">`).join("");
+  $("#codeList").innerHTML=groups.map(g=>`<div class="grp">${esc(g)}</div><div class="card">${codes.filter(c=>(c.group||"Прочее")===g).map(c=>`<div class="hist-l"><span>${esc(c.code)}</span>${esc(c.name)}</div>`).join("")}</div>`).join("");
+}
+$("#addCode").onclick=()=>{
+  const code=norm($("#nCode").value),name=$("#nName").value.trim(),group=$("#nGroup").value.trim()||"Прочее";
+  if(!code||!name){$("#codeMsg").textContent="Нужны код и название";return}
+  if(byCode(code)){$("#codeMsg").innerHTML=`<span class="err">Код ${esc(code)} уже занят: ${esc(byCode(code).name)}</span>`;return}
+  codes=[...codes,{code,name,group,alias:name}]; codesDirty=true; saveC();
+  $("#nCode").value=$("#nName").value="";
+  $("#codeMsg").innerHTML=`<span class="ok">Добавлен ${esc(code)}</span>`;
+  renderCodes(); refreshSync(); toast("Код добавлен"); 
+};
+
+/* ---------- export / import ---------- */
+async function download(name,text){
+  try{const url=URL.createObjectURL(new Blob([text],{type:name.endsWith(".json")?"application/json":"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return "ok"}catch{return "fail"}
+}
+function showText(title,text){
+  const w=$("#dumpWrap"); $("#dumpTitle").textContent=title; $("#dump").value=text;
+  w.classList.remove("hidden"); $("#dump").focus(); $("#dump").select();
+}
+$("#expJson").onclick=async()=>{
+  const text=JSON.stringify({exportedAt:new Date().toISOString(),profile,codes,workouts},null,1);
+  const r=await download(`gym-log-${today()}.json`,text);
+  if(r==="ok")toast("Файл выгружен");
+  else if(r==="fail")showText("JSON — скопируй и вставь в чат",text);
+};
+$("#expCsv").onclick=async()=>{
+  const rows=[["Дата","Код","Упражнение",...Array.from({length:MAXS},(_,i)=>"Подход "+(i+1))]];
+  for(const id of sortedIds().reverse()){const w=workouts[id];for(const e of (w.entries||[]))rows.push([fmt(w.date),e.code,((byCode(e.code)||{}).name||e.name||"")+(e.insteadOf?` (вместо ${e.insteadOf})`:""),...(e.sets||[])])}
+  const csv=rows.map(r=>r.map(v=>{v=String(v==null?"":v);return /[;"\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v}).join(";")).join("\n");
+  const r=await download(`gym-log-${today()}.csv`,"﻿"+csv);
+  if(r==="ok")toast("Файл выгружен");
+  else if(r==="fail")showText("CSV — скопируй и вставь в чат",csv);
+};
+$("#dumpClose").onclick=()=>$("#dumpWrap").classList.add("hidden");
+$("#impFile").addEventListener("change",ev=>{
+  const f=ev.target.files&&ev.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=readHistoryJson(r.result);
+      if(d.profile)validateProfile(d.profile);
+      const result=mergeHistory(workouts,codes,d);
+      if(!ss("fitnessAndroid.state",{workouts:result.workouts,codes:result.codes,profile:d.profile||profile}))return;
+      location.reload();
+    }catch(e){$("#impMsg").innerHTML='<span class="err">Файл не читается</span>'}
+  };
+  r.readAsText(f); ev.target.value="";
+});
+
+
+function renderStats(){
+  const ids=sortedIds();
+  const last=ids[0]?fmt(workouts[ids[0]].date):"—";
+  $("#stats").innerHTML=`Тренировок: <b>${ids.length}</b> · кодов: <b>${codes.length}</b> · последняя: <b>${esc(last)}</b>`;
+}
+
+/* ---------- tabs ---------- */
+let curTab="log";
+function syncSaveBar(){
+  const show = (curTab==="log") && cur.length>0;
+  $("#savebar").classList.toggle("hidden",!show);
+  document.querySelector("main").classList.toggle("nobar",!show);
+}
+function switchTab(t){
+  curTab=t;
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  ["log","plan","hist","codes","sys"].forEach(x=>$("#t-"+x).classList.toggle("hidden",x!==t));
+  syncSaveBar();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.t));
+
+function renderPlan(){
+  if(!HAVEP){$("#planDays").innerHTML='<div class="card mut">Для загрузки личной программы открой «Данные» и выбери персональный JSON.</div>';return}
+  const nx=nextPlanDay();
+  const wk=ascIds().filter(x=>weekStart(workouts[x].date)===weekStart());
+  $("#planWeek").innerHTML=`<div class="card"><div class="row" style="justify-content:space-between;align-items:baseline">
+    <b>На этой неделе: ${wk.length} из 4</b><span class="mut">с ${fmt(weekStart())}</span></div>
+    <div style="margin-top:8px">${wk.map((id,i)=>{const d=workouts[id].planDay?dayById(workouts[id].planDay):null;
+      return `<span class="chip done"><b>${i+1}</b> ${esc(d?d.name:"своя")} · ${fmt(workouts[id].date)}</span>`}).join("")||'<span class="mut">Пока ни одной</span>'}
+    </div>
+    <div class="mut" style="margin-top:8px">Всего тренировок: <b>${totalCount()}</b> · по программе: <b>${progCount()}</b>. Следующая — №${totalCount()+1} · н${progCount()+1}.</div></div>`;
+  $("#planDays").innerHTML=PROGRAM.days.map(d=>{const ld=lastDoneDay(d.id),dn=doneThisWeek(d.id);
+    const pos=futureDays(4).findIndex(x=>x.id===d.id);
+    return `<div class="card ptab daycard${pos===0?" done":""}"${pos===0?' style="border-color:var(--acc)"':""}>
+    <div class="row" style="justify-content:space-between;align-items:baseline"><b style="font-size:15px">${esc(d.name)}</b>
+    ${pos>=0?`<span class="badge">№${totalCount()+1+pos} · н${progCount()+1+pos}</span>`:""}</div>
+    <div class="mut" style="margin-bottom:4px">${pos===0?"следующая":(pos>0?`через ${pos} после ближайшей`:"")}${ld?` · последний раз ${fmt(ld)}`:" · ещё не делал"}</div>
+    <table>${d.items.map(it=>{const c=byCode(it.code),t=computeTarget(it);return `<tr><td>${esc(it.code)}</td><td>${esc(c&&c.name||"")}${t.why?`<div class="mut">↗ ${esc(t.why)}</div>`:""}${it.note?`<div class="mut">${esc(it.note)}</div>`:""}</td><td>${esc(planTarget(t))}</td></tr>`}).join("")}</table>
+    <div class="row" style="margin-top:10px"><button class="btn sm pri" data-load="${esc(d.id)}">Взять на тренировку</button></div></div>`}).join("");
+  $("#planDays").querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>{loadPlan(dayById(b.dataset.load));switchTab("log")});
+  $("#planTips").innerHTML='<div class="grp">Что важно помнить</div>'+TIPS.map(t=>`<div class="tipcard"><h4>${esc(t.t)}</h4><p>${esc(t.b)}</p></div>`).join("");
+}
+function renderDeload(){
+  const box=$("#deloadBox"); if(!box)return;
+  if(!HAVEP||!inDeload()){box.innerHTML="";return}
+  box.innerHTML=`<div class="tipcard"><h4>Разгрузочная неделя · до ${fmt(DELOAD.to)}</h4>
+    <p>Подходов вдвое меньше, веса те же, останавливаешься за 3–4 повторения до предела. Цифры просядут — так и надо: усталость уходит, набранное закрепляется. Со следующей недели прогрессия продолжится с того же места.</p></div>`;
+}
+function renderWarm(){
+  const box=$("#warmBox");
+  if(!curDay){box.innerHTML="";return}
+  const legs=curDay==="Д2";
+  box.innerHTML=`<div class="tipcard"><h4>Разминка — 7 минут, до первого подхода</h4>
+    <ul class="cues" style="margin-top:6px">
+      <li>3 минуты дорожка или велосипед, спокойно</li>
+      <li><b>Грудной отдел, 10 раз:</b> сядь на пол спиной к скамье, лопатки на её край, руки за голову — и прогнись назад через край, раскрывая грудь. Без рывка, выдох на прогибе. Это разгибает то, что сидячая работа согнула</li>
+      <li>Резинка: 20 разведений перед собой</li>
+      <li>Резинка: 15 наружных ротаций плеча каждой рукой</li>
+      ${legs?"<li>Таз, 5 минут: выпад с провисом 40 сек на сторону · «лягушка» 60 сек · ягодичный мостик 15 раз · вращения бедром по 10</li>"
+            :"<li>2 лёгких подхода в первом упражнении дня, вес 40–50% от рабочего</li>"}
+    </ul></div>`;
+}
+function tipsOff(){return ls("fitnessAndroid.tipsOff",false)}
+function renderTips(){
+  if(!HAVEP)return;
+  if(tipsOff()){
+    $("#tipBox").innerHTML=`<button class="tipstub" id="tipShow">Советы скрыты · <b>показать</b></button>`;
+    $("#tipShow").onclick=()=>{ss("fitnessAndroid.tipsOff",false);renderTips();renderTipToggle()};
+    return;
+  }
+  const seen=ls("fitnessAndroid.tipSeen",0), i=seen%TIPS.length, t=TIPS[i];
+  $("#tipBox").innerHTML=`<div class="tipcard"><h4>${esc(t.t)}</h4><p>${esc(t.b)}</p>
+    <div class="row" style="margin-top:8px;gap:6px"><button class="btn sm ghost" id="tipNext">Следующий совет</button>
+    <button class="btn sm ghost" id="tipHide">Скрыть советы</button></div></div>`;
+  $("#tipNext").onclick=()=>{ss("fitnessAndroid.tipSeen",seen+1);renderTips()};
+  $("#tipHide").onclick=()=>{ss("fitnessAndroid.tipsOff",true);renderTips();renderTipToggle();
+    toast("Советы скрыты. Все они остались на вкладке «План»")};
+}
+function renderTipToggle(){
+  const box=$("#tipToggle"); if(!box)return;
+  box.innerHTML=`<div class="card"><h3>Советы на экране записи</h3>
+    <p class="mut" style="margin:0 0 8px">${tipsOff()?"Сейчас скрыты. Полный список всегда есть на вкладке «План».":"Показываются по одному над списком упражнений."}</p>
+    <button class="btn sm" id="tipTgl">${tipsOff()?"Показывать снова":"Скрыть советы"}</button></div>`;
+  $("#tipTgl").onclick=()=>{ss("fitnessAndroid.tipsOff",!tipsOff());renderTips();renderTipToggle()};
+}
+function renderAll(){renderLog();renderTpls();renderStale();renderPlanBar();renderDeload();renderWarm();renderTips();renderTipToggle();renderPlan();renderHist();renderCodes();renderStats();refreshSync()}
+
+/* ---------- boot ---------- */
+loadLocal();
+if(HAVEP){let add=false;for(const nc of NEWCODES)if(!codes.find(c=>c.code===nc.code)){codes.push({...nc});add=true}
+  if(add){codesDirty=true;saveC()}}
+$("#date").value=today();
+loadDraft();
+rollStaleDraft();
+renderAll();
+restoreRest();
+refreshSync();
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js")
+    .then(()=>{$("#swMsg").innerHTML='<span class="ok">Офлайн-режим включён: страница открывается без сети.</span>'})
+    .catch(()=>{$("#swMsg").textContent="Офлайн-запуск страницы недоступен в этом браузере, но данные всё равно хранятся на телефоне."});
+}else $("#swMsg").textContent="Офлайн-запуск страницы недоступен в этом браузере, но данные всё равно хранятся на телефоне.";
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+*
+!.gitignore
+!.nojekyll
+!index.html
+!migration.js
+!program.js
+!sw.js
+!manifest.json
+!icon-192.png
+!icon-512.png
+!icon-maskable.png
+!README.md
